@@ -33,7 +33,7 @@ class TargetSherpaan(Target):
             "base_url",
             th.StringType,
             description="Base URL for the Sherpa service (defaults to test environment)",
-            default="https://sherpaservices-tst.sherpacloud.eu",
+            default="https://sherpaservices-prd.sherpacloud.eu",
         ),
         th.Property(
             "timeout",
