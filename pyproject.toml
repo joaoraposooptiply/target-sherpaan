@@ -1,22 +1,40 @@
-[project]
+[tool.poetry]
 name = "target-sherpaan"
 version = "0.1.0"
-description = "Singer target for sending PurchaseOrders to Sherpa API, built with the Meltano Singer SDK."
-requires-python = ">=3.9"
-dependencies = [
-    "singer-sdk~=0.46.4",
-    "requests>=2.31.0",
-    "tenacity>=9.1.2,<10.0.0",
-    "xmltodict>=1.0.2",
-    "target-hotglue>=0.0.2",
+description = "Singer target for sending PurchaseOrders to Sherpa API, built with the Meltano SDK for Singer Targets."
+authors = ["Hotglue"]
+keywords = [
+    "ELT",
+    "Sherpaan",
 ]
+license = "Apache 2.0"
 
-[project.scripts]
-target-sherpaan = 'target_sherpaan.target:TargetSherpaan.cli'
+[tool.poetry.dependencies]
+python = "<3.11,>=3.7.1"
+requests = "^2.25.1"
+singer-sdk = "^0.9.0"
+target-hotglue = "^0.0.2"
+tenacity = ">=9.1.2,<10.0.0"
+xmltodict = ">=1.0.2"
 
-[tool.hatch.build.targets.wheel]
-packages = ["target_sherpaan"]
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+tox = "^3.24.4"
+flake8 = "^3.9.2"
+black = "^21.9b0"
+pydocstyle = "^6.1.1"
+mypy = "^0.910"
+types-requests = "^2.26.1"
+isort = "^5.10.1"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3 # Vertical Hanging Indent
+src_paths = "target_sherpaan"
 
 [build-system]
-requires = ["hatchling>=1,<2"]
-build-backend = "hatchling.build"
+requires = ["poetry-core>=1.0.8"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+target-sherpaan = 'target_sherpaan.target:TargetSherpaan.cli'
