@@ -17,6 +17,8 @@ from target_sherpaan.auth import SherpaAuth
 class PurchaseOrderSink(Sink):
     """Sink for PurchaseOrders."""
 
+    # Stream name must match the incoming Singer stream, which is "BuyOrders"
+    # in the data.singer payload delivered by Hotglue.
     name = "BuyOrders"
     schema = th.PropertiesList(
         th.Property("supplier_remoteId", th.StringType, required=True),
@@ -36,12 +38,11 @@ class PurchaseOrderSink(Sink):
 
     def __init__(self, *args, **kwargs):
         """Initialize the sink."""
-        super().__init__(
-            *args,
-            schema=self.schema,
-            key_properties=["id"],
-            **kwargs
-        )
+        # When used with TargetHotglue, the SDK will pass `schema` and
+        # `key_properties` into the Sink constructor. Passing them again here
+        # would cause `TypeError: ... got multiple values for keyword 'schema'`,
+        # so we simply forward all args/kwargs to the base class unchanged.
+        super().__init__(*args, **kwargs)
         auth = SherpaAuth(self.config)
         timeout = self.config.get("timeout", 300)
         self.client = SherpaClient(auth, timeout=timeout)
