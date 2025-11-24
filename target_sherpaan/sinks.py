@@ -7,6 +7,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
+from xml.sax.saxutils import escape
 
 from singer_sdk import Sink
 from singer_sdk import typing as th
@@ -70,10 +71,10 @@ class PurchaseOrderSink(Sink):
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Body>
     <AddOrderedPurchase xmlns="http://sherpa.sherpaan.nl/">
-      <securityCode>{security_code}</securityCode>
-      <supplierCode>{supplier_code}</supplierCode>
-      <reference>{reference}</reference>
-      <warehouseCode>{warehouse_code}</warehouseCode>
+      <securityCode>{escape(str(security_code))}</securityCode>
+      <supplierCode>{escape(str(supplier_code))}</supplierCode>
+      <reference>{escape(str(reference))}</reference>
+      <warehouseCode>{escape(str(warehouse_code))}</warehouseCode>
     </AddOrderedPurchase>
   </soap12:Body>
 </soap12:Envelope>"""
@@ -146,10 +147,10 @@ class PurchaseOrderSink(Sink):
             quantity_ordered_for_soap = line.get("quantity", 0)
             
             purchase_lines_xml += f"""      <ChangePurchaseLine>
-        <ItemCode>{item_code_for_soap}</ItemCode>
-        <SupplierItemCode>{supplier_item_code_for_soap}</SupplierItemCode>
-        <QuantityOrdered>{quantity_ordered_for_soap}</QuantityOrdered>
-        <ExpectedDate>{formatted_date}</ExpectedDate>
+        <ItemCode>{escape(str(item_code_for_soap))}</ItemCode>
+        <SupplierItemCode>{escape(str(supplier_item_code_for_soap))}</SupplierItemCode>
+        <QuantityOrdered>{escape(str(quantity_ordered_for_soap))}</QuantityOrdered>
+        <ExpectedDate>{escape(str(formatted_date))}</ExpectedDate>
       </ChangePurchaseLine>
 """
 
@@ -157,8 +158,8 @@ class PurchaseOrderSink(Sink):
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Body>
     <ChangePurchase2 xmlns="http://sherpa.sherpaan.nl/">
-      <securityCode>{security_code}</securityCode>
-      <purchaseOrderNumber>{purchase_order_number}</purchaseOrderNumber>
+      <securityCode>{escape(str(security_code))}</securityCode>
+      <purchaseOrderNumber>{escape(str(purchase_order_number))}</purchaseOrderNumber>
       <purchaseLines>
 {purchase_lines_xml}      </purchaseLines>
     </ChangePurchase2>

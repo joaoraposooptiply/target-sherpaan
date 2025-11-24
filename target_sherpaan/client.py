@@ -34,7 +34,7 @@ class SherpaClient:
         self.timeout = timeout
         self.session = Session()
         self.session.headers.update({
-            "Content-Type": "text/xml; charset=utf-8",
+            "Content-Type": "application/soap+xml; charset=utf-8",
             "User-Agent": "PostmanRuntime/7.32.3",
             "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate, br",
