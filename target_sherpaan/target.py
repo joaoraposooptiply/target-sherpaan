@@ -31,6 +31,12 @@ class TargetSherpaan(TargetHotglue):
             description="Security code for authentication",
         ),
         th.Property(
+            "export_buyOrder_warehouse",
+            th.StringType,
+            required=True,
+            description="Default warehouse code to use for purchase orders when not provided in record",
+        ),
+        th.Property(
             "base_url",
             th.StringType,
             description="Base URL for the Sherpa service (defaults to test environment)",

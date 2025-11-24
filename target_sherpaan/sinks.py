@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from datetime import datetime, timedelta
@@ -23,7 +24,7 @@ class PurchaseOrderSink(Sink):
     schema = th.PropertiesList(
         th.Property("supplier_remoteId", th.StringType, required=True),
         th.Property("id", th.StringType, required=True),
-        th.Property("warehouse_code", th.StringType, required=True),
+        th.Property("warehouse_code", th.StringType, required=False),
         th.Property("created_at", th.StringType),
         th.Property("transaction_date", th.StringType),
         th.Property("externalid", th.StringType),
@@ -215,11 +216,25 @@ class PurchaseOrderSink(Sink):
             # Extract and map input fields to SOAP field values:
             # Input field "supplier_remoteId" -> SOAP field "supplierCode"
             supplier_code_for_soap = record["supplier_remoteId"]
-            # Input field "id" -> SOAP field "reference"
-            reference_for_soap = record["id"]
+            # Input field "id" -> SOAP field "reference" (convert to string)
+            reference_for_soap = str(record["id"])
             # Input field "warehouse_code" -> SOAP field "warehouseCode"
-            warehouse_code_for_soap = record["warehouse_code"]
-            line_items = record.get("line_items", [])
+            # Use record value if present, otherwise fall back to config default
+            warehouse_code_for_soap = record.get("warehouse_code") or self.config.get("export_buyOrder_warehouse")
+            if not warehouse_code_for_soap:
+                raise ValueError("warehouse_code is required but not found in record or config (export_buyOrder_warehouse)")
+            
+            # Parse line_items if it's a JSON string, otherwise use as-is
+            line_items_raw = record.get("line_items", [])
+            if isinstance(line_items_raw, str):
+                try:
+                    line_items = json.loads(line_items_raw)
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"Failed to parse line_items JSON string: {e}")
+                    raise ValueError(f"Invalid JSON in line_items: {e}")
+            else:
+                line_items = line_items_raw if isinstance(line_items_raw, list) else []
+            
             created_at = record.get("created_at")
 
             if not line_items:
