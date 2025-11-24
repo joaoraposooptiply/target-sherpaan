@@ -98,6 +98,7 @@ class PurchaseOrderSink(Sink):
         security_code = self.config["security_code"]
         
         # Format expected date from order-level created_at
+        # Expected format: YYYY-MM-DDTHH:MM:SS.000 (no timezone, exactly 3 digits for milliseconds)
         if created_at:
             try:
                 if isinstance(created_at, str):
@@ -118,17 +119,27 @@ class PurchaseOrderSink(Sink):
                         # No microseconds, just replace Z
                         date_str = created_at.replace("Z", "+00:00")
                     
-                    # Parse the date
+                    # Parse the date (may be timezone-aware or naive)
                     dt = datetime.fromisoformat(date_str)
-                    formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.000").strip()
+                    # Convert to naive datetime if timezone-aware, then format
+                    if dt.tzinfo is not None:
+                        dt = dt.replace(tzinfo=None)
+                    formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.000")
                 else:
-                    formatted_date = created_at
+                    # If it's already a datetime object, format it
+                    if isinstance(created_at, datetime):
+                        dt = created_at
+                        if dt.tzinfo is not None:
+                            dt = dt.replace(tzinfo=None)
+                        formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.000")
+                    else:
+                        formatted_date = str(created_at)
             except Exception as e:
                 self.logger.warning(f"Failed to parse created_at date '{created_at}': {e}, using default")
-                # Default to 30 days from now
+                # Default to 30 days from now (naive datetime)
                 formatted_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S.000")
         else:
-            # Default to 30 days from now
+            # Default to 30 days from now (naive datetime)
             formatted_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S.000")
         
         # Build purchase lines XML
