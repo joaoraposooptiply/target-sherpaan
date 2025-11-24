@@ -120,7 +120,7 @@ class PurchaseOrderSink(Sink):
                     
                     # Parse the date
                     dt = datetime.fromisoformat(date_str)
-                    formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.000")
+                    formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%S.000").strip()
                 else:
                     formatted_date = created_at
             except Exception as e:
