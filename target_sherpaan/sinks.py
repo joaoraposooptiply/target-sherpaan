@@ -50,6 +50,18 @@ class PurchaseOrderSink(HotglueSink):
         self.client = SherpaClient(auth, timeout=timeout)
         self.logger = logging.getLogger(__name__)
 
+    def preprocess_record(self, record: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Preprocess record before upserting.
+        
+        Args:
+            record: Record to preprocess
+            context: Optional context dictionary
+            
+        Returns:
+            Preprocessed record
+        """
+        return record
+
     def _format_expected_date(self, created_at: Optional[str]) -> str:
         """Format date to YYYY-MM-DDTHH:MM:SS.000 format (no timezone).
         
