@@ -150,7 +150,7 @@ class PurchaseOrderSink(Sink):
         <ItemCode>{escape(str(item_code_for_soap))}</ItemCode>
         <SupplierItemCode>{escape(str(supplier_item_code_for_soap))}</SupplierItemCode>
         <QuantityOrdered>{escape(str(quantity_ordered_for_soap))}</QuantityOrdered>
-        <ExpectedDate>{escape(str(formatted_date))}</ExpectedDate>
+        <ExpectedDate>{formatted_date}</ExpectedDate>
       </ChangePurchaseLine>
 """
 
