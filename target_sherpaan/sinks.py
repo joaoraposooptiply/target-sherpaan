@@ -9,14 +9,14 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from xml.sax.saxutils import escape
 
-from singer_sdk import Sink
 from singer_sdk import typing as th
+from target_hotglue.client import HotglueSink
 
 from target_sherpaan.client import SherpaClient
 from target_sherpaan.auth import SherpaAuth
 
 
-class PurchaseOrderSink(Sink):
+class PurchaseOrderSink(HotglueSink):
     """Sink for PurchaseOrders."""
 
     # Stream name must match the incoming Singer stream, which is "BuyOrders"
@@ -206,13 +206,20 @@ class PurchaseOrderSink(Sink):
 
         return None
 
-    def process_record(self, record: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> None:
-        """Process a single record.
+    def upsert_record(self, record: Dict[str, Any], context: Optional[Dict[str, Any]] = None):
+        """Process a single record and return metrics for hotglue SDK.
 
         Args:
             record: Record to process
             context: Optional context dictionary
+
+        Returns:
+            Tuple of (id, status, state_updates) for metrics tracking
         """
+        status = True
+        state_updates = dict()
+        purchase_order_number = None
+
         try:
             supplier_code_for_soap = record["supplier_remoteId"]
             reference_for_soap = str(record["id"])
@@ -235,7 +242,9 @@ class PurchaseOrderSink(Sink):
 
             if not line_items:
                 self.logger.warning(f"No line items found for order id {reference_for_soap}, skipping")
-                return
+                state_updates["success"] = False
+                status = False
+                return None, status, state_updates
 
             self.logger.info(f"Creating purchase order with id: {reference_for_soap}")
 
@@ -257,7 +266,9 @@ class PurchaseOrderSink(Sink):
                 self.logger.error(
                     f"Failed to extract purchase order number from response: {add_response}"
                 )
-                raise ValueError("Could not extract purchase order number from AddOrderedPurchase response")
+                state_updates["success"] = False
+                status = False
+                return None, status, state_updates
 
             self.logger.info(f"Created purchase order {purchase_order_number} for order id {reference_for_soap}")
             self.logger.info(f"Adding {len(line_items)} line items to order {purchase_order_number}")
@@ -278,15 +289,11 @@ class PurchaseOrderSink(Sink):
                 f"with {len(line_items)} lines for order id {reference_for_soap}"
             )
 
+            state_updates["success"] = True
+            return purchase_order_number, status, state_updates
+
         except Exception as e:
             self.logger.error(f"Error processing record {record.get('id', 'unknown')}: {e}")
-            raise
-
-    def process_batch(self, records: list[Dict[str, Any]]) -> None:
-        """Process a batch of records.
-        
-        Args:
-            records: List of records to process
-        """
-        for record in records:
-            self.process_record(record)
+            state_updates["success"] = False
+            status = False
+            return purchase_order_number, status, state_updates
